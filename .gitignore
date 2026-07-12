@@ -148,3 +148,9 @@ cython_debug/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+development team/feature-ai-speech/transcripts/
+
+development team/feature-video-processing/feature-ai-speech/
+
+development team/feature-video-processing/requirements.txt
