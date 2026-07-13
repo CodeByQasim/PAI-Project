@@ -78,6 +78,48 @@ def send_prompt(prompt: str, max_retries: int = 3, backoff_seconds: float = 2.0)
             else:
                 raise GeminiError(f"Gemini failed after {max_retries} attempts: {last_error}")
 
+def generate_title(transcript: str) -> str:
+    """
+    Generate a short, engaging title from a transcript.
+    """
+    prompt = f"""
+Generate a short and engaging video title (maximum 10 words)
+based on the following transcript.
+
+Transcript:
+{transcript}
+
+Return only the title.
+"""
+    return send_prompt(prompt)
+
+
+def generate_description(transcript: str) -> str:
+    """
+    Generate a YouTube-style video description.
+    """
+    prompt = f"""
+Write a professional video description based on this transcript.
+
+Transcript:
+{transcript}
+
+Return only the description.
+"""
+    return send_prompt(prompt)
+
+
+def generate_summary(transcript: str) -> str:
+    """
+    Generate a concise summary of the transcript.
+    """
+    prompt = f"""
+Summarize the following transcript in 2-3 sentences.
+
+Transcript:
+{transcript}
+"""
+    return send_prompt(prompt)
 
 if __name__ == "__main__":
     # Day 1 check
