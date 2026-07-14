@@ -121,6 +121,30 @@ Transcript:
 """
     return send_prompt(prompt)
 
+def generate_editing_suggestions(transcript: str) -> str:
+    """
+    Generate AI-powered video editing suggestions based on the transcript.
+    """
+    prompt = f"""
+You are an expert video editor.
+
+Analyze the following transcript and suggest video editing improvements.
+
+Include suggestions for:
+- Scene cuts
+- Transitions
+- Background music
+- B-roll footage
+- Text overlays or captions
+- Highlight moments
+
+Transcript:
+{transcript}
+
+Return the suggestions as bullet points.
+"""
+    return send_prompt(prompt)
+
 if __name__ == "__main__":
     # Day 1 check
     if test_connection():
@@ -130,5 +154,19 @@ if __name__ == "__main__":
             result = send_prompt(sample_prompt)
             print("\nSample prompt:", sample_prompt)
             print("Gemini response:", result)
+            sample_transcript = "Hey Vishal, how are you? Hope you are doing well."
+
+            print("\nGenerated Title:")
+            print(generate_title(sample_transcript))
+
+            print("\nGenerated Description:")
+            print(generate_description(sample_transcript))
+
+            print("\nGenerated Summary:")
+            print(generate_summary(sample_transcript))
+            
+            print("\nGenerated Editing Suggestions:")
+            print(generate_editing_suggestions(sample_transcript))
         except GeminiError as e:
             print(f"Could not get a response: {e}")
+            

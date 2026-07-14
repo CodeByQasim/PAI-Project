@@ -30,6 +30,19 @@ def _get_model():
         _model = whisper.load_model(WHISPER_MODEL_SIZE)
     return _model
 
+def _format_timestamp(seconds: float) -> str:
+    """
+    Convert seconds to SRT timestamp format:
+    HH:MM:SS,mmm
+    """
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    milliseconds = int((seconds - int(seconds)) * 1000)
+
+    return f"{hours:02}:{minutes:02}:{secs:02},{milliseconds:03}"
+
+
 
 def transcribe_audio(file_path: str) -> dict:
     """
@@ -67,6 +80,44 @@ def transcribe_audio(file_path: str) -> dict:
     }
 
 
+def generate_srt(transcript: dict) -> str:
+    """
+    Generate SRT subtitle content from a Whisper transcript.
+    """
+    segments = transcript.get("segments", [])
+
+    if not segments:
+        raise TranscriptionError("No transcript segments found to generate subtitles.")
+
+    srt_lines = []
+
+    for index, segment in enumerate(segments, start=1):
+        start = _format_timestamp(segment["start"])
+        end = _format_timestamp(segment["end"])
+        text = segment["text"].strip()
+
+        srt_lines.append(f"{index}")
+        srt_lines.append(f"{start} --> {end}")
+        srt_lines.append(text)
+        srt_lines.append("")  # Blank line between subtitles
+
+    return "\n".join(srt_lines)
+
+def save_srt(source_file: str, srt_content: str, transcripts_dir: str = TRANSCRIPTS_DIR) -> str:
+    """
+    Save SRT subtitle content to disk and return the saved file path.
+    """
+    os.makedirs(transcripts_dir, exist_ok=True)
+
+    base_name = os.path.splitext(os.path.basename(source_file))[0]
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_path = os.path.join(transcripts_dir, f"{base_name}_{timestamp}.srt")
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(srt_content)
+
+    return out_path
+
 def save_transcript(source_file: str, transcript: dict, transcripts_dir: str = TRANSCRIPTS_DIR) -> str:
     """
     Save a transcript to disk as JSON (full detail) and return the saved file path.
@@ -102,6 +153,15 @@ if __name__ == "__main__":
 
         saved_path = save_transcript(sample, transcript)
         print(f"Transcript saved to: {saved_path}")
+        # Generate SRT subtitles
+        srt_content = generate_srt(transcript)
+
+        srt_path = save_srt(sample, srt_content)
+
+        print(f"SRT subtitle saved to: {srt_path}")
+
+        print("\n----- SRT Preview -----")
+        print(srt_content)
 
     except TranscriptionError as e:
         print(f"Transcription failed: {e}")
