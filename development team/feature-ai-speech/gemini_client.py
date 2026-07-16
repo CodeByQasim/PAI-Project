@@ -7,11 +7,18 @@ Day 3: error handling + retry for API edge cases (done below)
 """
 
 import time
+import logging
 import google.generativeai as genai
 from config import GEMINI_API_KEY, GEMINI_MODEL
 
 genai.configure(api_key=GEMINI_API_KEY)
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 class GeminiError(Exception):
     """Raised when Gemini fails after all retries."""
@@ -27,10 +34,10 @@ def test_connection():
     try:
         model = _get_model()
         response = model.generate_content("Say 'Gemini is connected.'")
-        print(response.text.strip())
+        logger.info(response.text.strip())
         return True
     except Exception as e:
-        print(f"Gemini connection failed: {e}")
+        logger.error(f"Gemini connection failed: {e}")
         return False
 
 
@@ -121,6 +128,89 @@ Transcript:
 """
     return send_prompt(prompt)
 
+def generate_editing_suggestions(transcript: str) -> str:
+    """
+    Generate AI-powered video editing suggestions.
+    """
+    prompt = f"""
+You are an expert video editor.
+
+Based on the following transcript, suggest:
+
+- Scene cuts
+- Transitions
+- Background music
+- B-roll footage
+- Text overlays or captions
+- Highlight moments
+
+Transcript:
+{transcript}
+
+Return the suggestions in a clear, structured format.
+"""
+    return send_prompt(prompt)
+
+
+def generate_hashtags(transcript: str) -> str:
+    """
+    Generate relevant hashtags for the transcript.
+    """
+    prompt = f"""
+Generate 10 relevant social media hashtags for this transcript.
+
+Transcript:
+{transcript}
+
+Return only the hashtags.
+"""
+    return send_prompt(prompt)
+
+def generate_editing_suggestions(transcript: str) -> str:
+    """
+    Generate AI-powered video editing suggestions based on the transcript.
+    """
+    prompt = f"""
+You are an expert video editor.
+
+Analyze the following transcript and suggest video editing improvements.
+
+Include suggestions for:
+- Scene cuts
+- Transitions
+- Background music
+- B-roll footage
+- Text overlays or captions
+- Highlight moments
+
+Transcript:
+{transcript}
+
+Return the suggestions as bullet points.
+"""
+    return send_prompt(prompt)
+
+def generate_hashtags(transcript: str) -> str:
+    """
+    Generate relevant hashtags based on the transcript.
+    """
+    prompt = f"""
+You are a social media content expert.
+
+Based on the following transcript, generate 8-10 relevant hashtags.
+
+Rules:
+- Use only hashtags.
+- Each hashtag should start with #.
+- Put each hashtag on a new line.
+- Do not include explanations.
+
+Transcript:
+{transcript}
+"""
+
+    return send_prompt(prompt)
+
 if __name__ == "__main__":
     # Day 1 check
     if test_connection():
@@ -130,5 +220,25 @@ if __name__ == "__main__":
             result = send_prompt(sample_prompt)
             print("\nSample prompt:", sample_prompt)
             print("Gemini response:", result)
+            sample_transcript = "Hey Vishal, how are you? Hope you are doing well."
+
+            print("\nGenerated Title:")
+            print(generate_title(sample_transcript))
+
+            print("\nGenerated Description:")
+            print(generate_description(sample_transcript))
+
+            print("\nGenerated Summary:")
+            print(generate_summary(sample_transcript))
+            
+            print("\nGenerated Editing Suggestions:")
+            print(generate_editing_suggestions(sample_transcript))
+            
+            print("\nGenerated Hashtags:")
+            print(generate_hashtags(sample_transcript))
+            
+            print("\nGenerated Hashtags:")
+            print(generate_hashtags(sample_transcript))
         except GeminiError as e:
             print(f"Could not get a response: {e}")
+            
