@@ -42,6 +42,19 @@ def _format_timestamp(seconds: float) -> str:
 
     return f"{hours:02}:{minutes:02}:{secs:02},{milliseconds:03}"
 
+def _format_vtt_timestamp(seconds: float) -> str:
+    """
+    Convert seconds to WebVTT timestamp format:
+    HH:MM:SS.mmm
+    """
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    milliseconds = int((seconds - int(seconds)) * 1000)
+
+    return f"{hours:02}:{minutes:02}:{secs:02}.{milliseconds:03}"
+
+
 
 
 def transcribe_audio(file_path: str) -> dict:
@@ -118,6 +131,31 @@ def save_srt(source_file: str, srt_content: str, transcripts_dir: str = TRANSCRI
 
     return out_path
 
+def save_vtt(source_file: str, transcript: dict, transcripts_dir: str = TRANSCRIPTS_DIR) -> str:
+    """
+    Save subtitle file in WebVTT (.vtt) format.
+    """
+    import os
+
+    os.makedirs(transcripts_dir, exist_ok=True)
+
+    base_name = os.path.splitext(os.path.basename(source_file))[0]
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_path = os.path.join(transcripts_dir, f"{base_name}_{timestamp}.vtt")
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write("WEBVTT\n\n")
+
+        for segment in transcript["segments"]:
+            start = _format_vtt_timestamp(segment["start"])
+            end = _format_vtt_timestamp(segment["end"])
+            text = segment["text"].strip()
+
+            f.write(f"{start} --> {end}\n")
+            f.write(f"{text}\n\n")
+
+    return out_path
+
 def save_transcript(source_file: str, transcript: dict, transcripts_dir: str = TRANSCRIPTS_DIR) -> str:
     """
     Save a transcript to disk as JSON (full detail) and return the saved file path.
@@ -162,6 +200,9 @@ if __name__ == "__main__":
 
         print("\n----- SRT Preview -----")
         print(srt_content)
+        
+        vtt_path = save_vtt(sample, transcript)
+        print(f"VTT subtitle saved to: {vtt_path}")
 
     except TranscriptionError as e:
         print(f"Transcription failed: {e}")
