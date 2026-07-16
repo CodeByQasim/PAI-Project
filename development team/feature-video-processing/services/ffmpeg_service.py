@@ -1,7 +1,7 @@
 import os
 import uuid
 import subprocess
-
+from config import FFMPEG_PATH
 
 OUTPUT_DIR = "app/outputs"
 
@@ -20,7 +20,7 @@ def trim_video(input_path: str, start_time: int, end_time: int):
     duration = end_time - start_time
 
     command = [
-        "ffmpeg",
+        FFMPEG_PATH,
         "-i", input_path,
         "-ss", str(start_time),
         "-t", str(duration),
@@ -57,7 +57,7 @@ def merge_videos(video_paths: list):
             f.write(f"file '{os.path.abspath(video)}'\n")
 
     command = [
-        "ffmpeg",
+        FFMPEG_PATH,
         "-f",
         "concat",
         "-safe",
@@ -99,7 +99,7 @@ def burn_subtitles(video_path: str, subtitle_path: str):
     print("Subtitle:", subtitle_path)
 
     command = [
-        "ffmpeg",
+        FFMPEG_PATH,
         "-i", video_path,
         "-vf", f"subtitles='{subtitle_path}'",
         "-c:a", "copy",
